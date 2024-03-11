@@ -1,113 +1,253 @@
+"use client";
+import Cookies from "js-cookie";
 import Image from "next/image";
+import React, { useEffect } from "react";
+import { delay } from "lodash";
+import clsx from "clsx";
+import { Frame } from "@/components/Frame";
+import Fireworks from "react-canvas-confetti/dist/presets/fireworks";
+import { useDarkMode, useMediaQuery } from "usehooks-ts";
+import useCustomTimer from "@/lib/timer";
 
 export default function Home() {
+  const [opaque, setOpaque] = React.useState<boolean>();
+  const [bgMusic, setBgMusic] = React.useState<HTMLAudioElement>();
+  const [frameSize, setFrameSize] = React.useState<FrameSize>();
+  const [soundApplause, setSoundApplause] = React.useState<HTMLAudioElement>();
+  const isDesktop = useMediaQuery("(min-width: 800px)");
+
+  const [pieces, setPieces] = React.useState<DEFAULT_PIECES_PROPS[]>();
+  const [isSuccess, setIsSuccess] = React.useState(false);
+  const [numberOfMoves, setNumberOfMoves] = React.useState(0);
+
+  const { start, pause, reset, seconds, miliseconds, minutes } =
+    useCustomTimer();
+  const [isFirstTime, setIsFirstTime] = React.useState(true);
+
+  const handleStart = () => {
+    setOpaque(false);
+    const jumbledSet = [7, 6, 3, 8, 2, 4, 5, 1, 0];
+    const initPieces = pieces;
+
+    let initIndex = 0;
+    const myInterval = setInterval(() => {
+      initPieces![initIndex] = {
+        ...initPieces![initIndex],
+        ...POSITION_SET[jumbledSet[initIndex]],
+      };
+
+      setPieces([...initPieces!]);
+      initIndex++;
+      if (initIndex > jumbledSet.length - 1) {
+        clearInterval(myInterval);
+        delay(() => {
+          setOpaque(true);
+          start();
+        }, 500);
+      }
+    }, 200);
+  };
+
+  useEffect(() => {
+    if (!pieces) return;
+    const isSame = pieces.filter((pc, index) => pc.position !== index);
+    if (isSame.length === 0 && opaque) {
+      soundApplause?.play();
+      setIsSuccess(true);
+      pause();
+    }
+  }, [pieces]);
+
+  useEffect(() => {
+    const size = isDesktop
+      ? { width: 500, height: 625 }
+      : { width: 320, height: 400 };
+    setFrameSize(size);
+
+    setPieces(DEFAULT_PIECES(size.width, size.height));
+    setOpaque(undefined);
+    setNumberOfMoves(0);
+    reset();
+  }, [isDesktop]);
+
+  useEffect(() => {
+    setSoundApplause(new Audio("/sounds/effects/applause.wav"));
+    setBgMusic(new Audio("/sounds/music/run-amok.mp3"));
+  }, []);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
+    <main className="flex relative min-h-screen flex-col items-center justify-center select-none">
+      <div
+        className={clsx(
+          "transition-all opacity-100 duration-500 absolute w-full h-screen flex-col gap-4 z-50 left-0 top-0 bg-[#202020] flex justify-center items-center",
+          {
+            "!opacity-0 !pointer-events-none": !isFirstTime,
+          }
+        )}
+      >
+        <Image
+          width={500}
+          height={190}
+          className="!w-[300px] !h-auto transition-all duration-500"
+          alt={""}
+          src={"/images/svgs/logo.svg"}
+        />
+        <button
+          className={clsx(
+            " font-runcort text-[#dbdbdb] text-3xl transition-color duration-500 rounded-md py-2 px-4 bg-[#204311] z-20 hover:bg-[#284c19] hover:text-white",
+            {
+              hidden: opaque !== undefined,
+            }
+          )}
+          onClick={() => {
+            setIsFirstTime(false);
+            Cookies.set("pm-isFirstTime", "false");
+            bgMusic?.play();
+            bgMusic!.volume = 0.3;
+            bgMusic!.loop = true;
+          }}
+        >
+          CONTINUE
+        </button>
       </div>
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-full sm:before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full sm:after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
+      <div className="absolute w-full h-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
         <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
+          fill
+          draggable={false}
+          className="w-full h-full object-cover"
+          alt="background"
+          src="/images/backgrounds/desert.jpg"
+        />
+        <div className="absolute top-0 left-0 w-full h-full bg-[#00000079]" />
+      </div>
+      <div className="relative tracking-widest drop-shadow-2xl mt-4">
+        <Image
+          width={500}
+          height={190}
+          className="!w-[300px] !h-auto"
+          alt={""}
+          src={"/images/svgs/logo.svg"}
         />
       </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
+      <div className="flex p-4 min-[515px]:h-full max-[514px]:flex-col max-w-[1080px] w-full justify-center items-center gap-4">
+        <div
+          className={clsx(
+            "w-[320px] transition-all flex max-[514px]:flex-row flex-col min-[515px]:gap-4 min-[515px]:w-[150px] min-[515px]:h-[400px] min-[800px]:w-[250px] min-[800px]:h-[625px] duration-300 h-[200px] relative border-[0.3125rem] bg-[#202020] border-[#202020] rounded-lg  overflow-hidden",
+            {
+              "!border-green-900 ": isSuccess,
+            }
+          )}
         >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
+          <div>
+            <Image
+              fill
+              draggable={false}
+              className="object-cover !w-full max-[514px]:!min-w-[152px] max-[514px]:!h-[190px] !h-auto !relative"
+              alt="original"
+              src={"/images/puzzles/pikachu.jpg"}
+            />
+          </div>
+          <div className="h-full font-runcort tracking-wider text-[#ffffffb1] w-full flex flex-col gap-2 min-[800px]:gap-4 p-2">
+            <p>
+              Elapse time: <br />
+            </p>
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
+            <p className="text-center text-2xl min-[800px]:text-3xl">
+              {minutes}:{seconds}:{miliseconds}
+            </p>
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
+            <p>Moves:</p>
+            <p className="text-center text-2xl min-[800px]:text-3xl">
+              {" "}
+              {numberOfMoves}
+            </p>
+          </div>
+        </div>
+        <div
+          style={{ width: frameSize?.width, height: frameSize?.height }}
+          className={clsx(
+            "flex relative transition-all duration-300 border-[0.3125rem] border-[#202020] bg-[#202020] rounded-lg overflow-hidden",
+            {
+              "!border-green-900 !bg-green-900 !pointer-events-none": isSuccess,
+            }
+          )}
         >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50 text-balance`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
+          <div
+            className={clsx(
+              "absolute top-0 left-0 w-full h-full bg-[#00000079] z-10",
+              {
+                hidden: opaque,
+              }
+            )}
+          />
+          <button
+            className={clsx(
+              "absolute top-1/2 left-1/2 font-runcort text-[#dbdbdb] -translate-x-1/2 text-3xl transition-color duration-500 -translate-y-1/2 rounded-md py-2 px-4 bg-[#204311] z-20 hover:bg-[#284c19] hover:text-white",
+              {
+                hidden: opaque !== undefined,
+              }
+            )}
+            onClick={handleStart}
+          >
+            START
+          </button>
+          {pieces && (
+            <Frame
+              width={frameSize?.width ?? 0}
+              height={frameSize?.height ?? 0}
+              pieces={pieces}
+              opaque={opaque}
+              setPieces={setPieces}
+              onMove={() => {
+                setNumberOfMoves((prev) => prev + 1);
+              }}
+            />
+          )}
+        </div>
       </div>
+      {isSuccess && (
+        <div className="absolute top-0 left-0 w-full h-full">
+          <Fireworks autorun={{ speed: 1, duration: 6000 }} />
+        </div>
+      )}
     </main>
   );
 }
+
+const ARR = Array.from(Array(9).keys());
+
+const DEFAULT_PIECES = (width: number, height: number) => {
+  const val: DEFAULT_PIECES_PROPS[] = ARR.map((index) => {
+    return {
+      position: index,
+      type: index,
+      style: {
+        transform: `translate(${100 * (index % 3)}%,${
+          100 * Math.floor(index / 3)
+        }%)`,
+      },
+      imageClassName: clsx("object-cover absolute", {
+        "!w-[500px] !h-[625px]": width === 500,
+        "!w-[320px] !h-[400px]": width !== 500,
+      }),
+      imageStyle: {
+        objectPosition: `-${(width / 3) * (index % 3)}px ${
+          -(height / 3) * Math.floor(index / 3)
+        }px`,
+      },
+    };
+  });
+  return val;
+};
+
+const POSITION_SET: POSITION_SET[] = ARR.map((index) => {
+  return {
+    position: index,
+    style: {
+      transform: `translate(${100 * (index % 3)}%,${
+        100 * Math.floor(index / 3)
+      }%)`,
+    },
+  };
+});
