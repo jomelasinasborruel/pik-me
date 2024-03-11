@@ -8,6 +8,8 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Pik-me",
   description: "Mini project",
+  metadataBase: new URL("https://pik-me.vercel.app/"),
+  openGraph: { images: "/opengraph-image.png" },
 };
 
 export default function RootLayout({
