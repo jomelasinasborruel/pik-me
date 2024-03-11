@@ -27,7 +27,8 @@ export default function Home() {
 
   const handleStart = () => {
     setOpaque(false);
-    const jumbledSet = [7, 6, 3, 8, 2, 4, 5, 1, 0];
+    // const jumbledSet = [7, 6, 3, 8, 2, 4, 5, 1, 0];
+    const jumbledSet = [0, 1, 2, 3, 4, 5, 7, 6, 8];
     const initPieces = pieces;
 
     let initIndex = 0;
