@@ -2,7 +2,7 @@ import clsx from "clsx";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 
-export const Frame = React.memo(
+const Frame = React.memo(
   ({ pieces, opaque, width, height, setPieces, onMove }: FrameProps) => {
     const [moveSound, setMoveSound] = useState<HTMLAudioElement>();
     const handleClick = (
@@ -77,6 +77,8 @@ export const Frame = React.memo(
     });
   }
 );
+
+export default Frame;
 
 const isMovable = (piecePosition: number, blankPosition: number) => {
   if (blankPosition === 0 && [1, 3].includes(piecePosition)) {

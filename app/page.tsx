@@ -4,10 +4,11 @@ import Image from "next/image";
 import React, { useEffect } from "react";
 import { delay } from "lodash";
 import clsx from "clsx";
-import { Frame } from "@/components/Frame";
+
 import Fireworks from "react-canvas-confetti/dist/presets/fireworks";
-import { useDarkMode, useMediaQuery } from "usehooks-ts";
+import { useMediaQuery } from "usehooks-ts";
 import useCustomTimer from "@/lib/timer";
+import Frame from "@/components/Frame";
 
 export default function Home() {
   const [opaque, setOpaque] = React.useState<boolean>();
