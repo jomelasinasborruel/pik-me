@@ -6,7 +6,7 @@ import "@/public/fonts/runcort/stylesheet.scss";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Pic-me",
+  title: "Pik-me",
   description: "Mini project",
 };
 
