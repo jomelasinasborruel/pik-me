@@ -39,8 +39,8 @@ export default function Home() {
     //   jumbledSet = [0, 1, 2, 3, 4, 5, 7, 6, 8];
     // } else {
     // }
-    // jumbledSet = [7, 6, 3, 8, 2, 4, 5, 1, 0];
-    jumbledSet = [0, 1, 2, 3, 4, 8, 6, 7, 5];
+    jumbledSet = [7, 6, 3, 8, 2, 4, 5, 1, 0];
+    // jumbledSet = [0, 1, 2, 3, 4, 8, 6, 7, 5];
 
     const initPieces = pieces;
 
